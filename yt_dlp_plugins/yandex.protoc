@@ -1,0 +1,83 @@
+// https://github.com/ilyhalight/voice-over-translation
+syntax = "proto2";
+message VideoTranslationHelpObject { // const VideoTranslationHelpObject = new protobuf.Type("VideoTranslationHelpObject",)
+  optional string target = 1;    // .add(new protobuf.Field("target", 1, "string")) // video_file_url or subtitles_file_url
+  optional string targetUrl = 2; // .add(new protobuf.Field("targetUrl", 2, "string")); // url to video_file or url to subtitles
+}
+message VideoTranslationRequest { //const VideoTranslationRequest = new protobuf.Type("VideoTranslationRequest")
+  optional string url = 3; // .add(new protobuf.Field("url", 3, "string"))
+  optional string deviceId = 4; // .add(new protobuf.Field("deviceId", 4, "string")) // removed?
+  optional bool firstRequest = 5; // .add(new protobuf.Field("firstRequest", 5, "bool")) // true for the first request, false for subsequent ones
+  optional double duration = 6; // .add(new protobuf.Field("duration", 6, "double"))
+  optional int32 unknown2 = 7; // .add(new protobuf.Field("unknown2", 7, "int32")) // 1 1
+  optional string language = 8; // .add(new protobuf.Field("language", 8, "string")) // source language code
+  optional int32 unknown3 = 9; // .add(new protobuf.Field("unknown3", 9, "int32")) // 0 0
+  optional int32 unknown4 = 10; //.add(new protobuf.Field("unknown4", 10, "int32")) // 0 0
+  repeated VideoTranslationHelpObject translationHelp = 11; // .add(new protobuf.Field("translationHelp",11,"VideoTranslationHelpObject","repeated",)
+  optional string responseLanguage = 14; // .add(new protobuf.Field("responseLanguage", 14, "string"))
+  optional int32 unknown5 = 15; // .add(new protobuf.Field("unknown5", 15, "int32")); // 0
+}
+
+message VideoSubtitlesRequest { // const VideoSubtitlesRequest = new protobuf.Type("VideoSubtitlesRequest")
+  optional string url = 1; // .add(new protobuf.Field("url", 1, "string"))
+  optional string language = 2; // .add(new protobuf.Field("language", 2, "string")); // source language code
+}
+
+message VideoStreamRequest { // const VideoStreamRequest = new protobuf.Type("VideoStreamRequest")
+  optional string url = 1; // .add(new protobuf.Field("url", 1, "string"))
+  optional string language = 2; // .add(new protobuf.Field("language", 2, "string"))
+  optional string responseLanguage = 3; // .add(new protobuf.Field("responseLanguage", 3, "string"));
+}
+
+message VideoStreamPingRequest { // const VideoStreamPingRequest = new protobuf.Type("VideoStreamPingRequest").add(
+  optional int32 pingId = 1; // new protobuf.Field("pingId", 1, "int32"),);
+}
+
+message VideoTranslationResponse { //const VideoTranslationResponse = new protobuf.Type("VideoTranslationResponse")
+  optional string url = 1; // .add(new protobuf.Field("url", 1, "string"))
+  optional double duration =2; // .add(new protobuf.Field("duration", 2, "double"))
+  optional int32 status = 4; // .add(new protobuf.Field("status", 4, "int32"))
+  optional int32 remainingTime = 5; // .add(new protobuf.Field("remainingTime", 5, "int32")) // secs before translation (used as interval before next request in yaBrowser)
+  optional int32 unknown0 = 6; // .add(new protobuf.Field("unknown0", 6, "int32")) // unknown 0 (1st request) -> 10 (2nd, 3th and etc requests)
+  optional string unknown1 = 7; // .add(new protobuf.Field("unknown1", 7, "string"))
+  optional string language = 8; // .add(new protobuf.Field("language", 8, "string")) // detected language (if the wrong one is set)
+  optional string message = 9; // .add(new protobuf.Field("message", 9, "string"));
+}
+
+message VideoSubtitlesObject { // const VideoSubtitlesObject = new protobuf.Type("VideoSubtitlesObject")
+  optional string language = 1; //  .add(new protobuf.Field("language", 1, "string"))
+  optional string url = 2 ; // .add(new protobuf.Field("url", 2, "string"))
+  optional int32 unknown2 = 3; // .add(new protobuf.Field("unknown2", 3, "int32"))
+  optional string translatedLanguage = 4; // .add(new protobuf.Field("translatedLanguage", 4, "string"))
+  optional string translatedUrl = 5; // .add(new protobuf.Field("translatedUrl", 5, "string"))
+  optional int32 unknown5 = 6; // .add(new protobuf.Field("unknown5", 6, "int32"))
+  optional int32 unknown6 = 7; //.add(new protobuf.Field("unknown6", 7, "int32"));
+}
+
+message VideoSubtitlesResponse { // const VideoSubtitlesResponse = new protobuf.Type("VideoSubtitlesResponse")
+  optional int32 unknown0 = 1; // .add(new protobuf.Field("unknown0", 1, "int32"))
+  repeated VideoSubtitlesObject subtitles = 2; //.add(new protobuf.Field("subtitles", 2, "VideoSubtitlesObject", "repeated"));
+}
+
+message VideoStreamObject { // const VideoStreamObject = new protobuf.Type("VideoStreamObject")
+  optional string url = 1; // .add(new protobuf.Field("url", 1, "string"))
+  optional int64 timestamp = 2; //.add(new protobuf.Field("timestamp", 2, "int64")); // timestamp in ms (probably means the time of 1 request to translate the stream)
+}
+
+message VideoStreamResponse { // const VideoStreamResponse = new protobuf.Type("VideoStreamResponse")
+  optional int32 interval = 1; // .add(new protobuf.Field("interval", 1, "int32")) // 20s - streaming, 10s - translating, 0s - there is no connection with the server (the broadcast is finished or deleted)
+  optional VideoStreamObject translatedInfo = 2; //.add(new protobuf.Field("translatedInfo", 2, "VideoStreamObject"))
+  optional int32 pingId = 3; //.add(new protobuf.Field("pingId", 3, "int32"));
+}
+
+// * Yandex has been skipping any translation streams for a long time (whitelist always return true)
+// * Most likely, it is already outdated and will not be used
+message VideoWhitelistStreamRequest { //const VideoWhitelistStreamRequest = new protobuf.Type("VideoWhitelistStreamRequest")
+  optional string url = 1; //   .add(new protobuf.Field("url", 1, "string"))
+  optional string deviceId = 4; // .add(new protobuf.Field("deviceId", 4, "string"))
+}
+
+message  VideoWhitelistStreamResponse { // const VideoWhitelistStreamResponse = new protobuf.Type("VideoWhitelistStreamResponse")
+  optional bool inWhitelist = 1;// .add(new protobuf.Field("inWhitelist", 1, "bool"))
+}
+
