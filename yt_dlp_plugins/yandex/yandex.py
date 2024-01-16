@@ -24,19 +24,9 @@ def requestSubtitlesTranslation(self, sub_url, video_id, request_lang="en", firs
   subReq.url = sub_url
   subReq.language = request_lang
   body = subReq.SerializeToString()
-  binResp = self._request_webpage(
-    f"https://{_workerHost}/video-subtitles/get-subtitles",
-    video_id,
-    data = body,
-    headers = {
-      "Accept": "application/x-protobuf",
-      "Content-Type": "application/x-protobuf",
-      "Accept-Language": "en",
-      "User-Agent": _yandexUserAgent,
-      "Vsubs-Signature": getSignature(body), 
-      "Sec-Vsubs-Token": uuid
-    },
-  )
+  binResp = self._request_webpage( f"https://{_workerHost}/video-subtitles/get-subtitles", video_id, data = body,
+    headers = {"Accept": "application/x-protobuf", "Content-Type": "application/x-protobuf", "Accept-Language": "en",
+               "User-Agent": _yandexUserAgent, "Vsubs-Signature": getSignature(body), "Sec-Vsubs-Token": uuid},)
   translateResponse = yandex_pb2.VideoSubtitlesResponse()
   try:
     translateResponse.ParseFromString(binResp.read())
@@ -47,26 +37,15 @@ def requestSubtitlesTranslation(self, sub_url, video_id, request_lang="en", firs
 
 def requestVideoTranslation(self, video_url, video_id, duration = 341, request_lang="en", response_lang="ru", first_request = True, uuid = getUUID().hex):
   videoReq = yandex_pb2.VideoTranslationRequest()
-  videoReq.duration = duration
-  videoReq.url = video_url
-  videoReq.language = request_lang
-  videoReq.responseLanguage = response_lang
-  videoReq.firstRequest = first_request
+
+  videoReq.duration = duration ; videoReq.url = video_url ; videoReq.language = request_lang
+  videoReq.responseLanguage = response_lang ; videoReq.firstRequest = first_request
   videoReq.unknown2 = 1; videoReq.unknown3 = videoReq.unknown4 = videoReq.unknown5 = 0
+
   body = videoReq.SerializeToString()
-  binResp = self._request_webpage(
-    f"https://{_workerHost}/video-translation/translate",
-    video_id,
-    data = body,
-    headers = {
-      "Accept": "application/x-protobuf",
-      "Content-Type": "application/x-protobuf",
-      "Accept-Language": "en",
-      "User-Agent": _yandexUserAgent,
-      "Vtrans-Signature": getSignature(body), 
-      "Sec-Vtrans-Token": uuid
-    },
-  )
+  binResp = self._request_webpage( f"https://{_workerHost}/video-translation/translate", video_id, data = body,
+    headers = {"Accept": "application/x-protobuf", "Content-Type": "application/x-protobuf", "Accept-Language": "en",
+               "User-Agent": _yandexUserAgent, "Vtrans-Signature": getSignature(body), "Sec-Vtrans-Token": uuid},)
   protoResp = yandex_pb2.VideoTranslationResponse()
   try:
     protoResp.ParseFromString(binResp.read())
