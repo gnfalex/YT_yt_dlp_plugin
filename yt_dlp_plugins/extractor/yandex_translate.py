@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, re, json
 sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "\\..\\yandex\\")
 import yandex
 
@@ -21,7 +21,7 @@ class YandexTranslateIE(InfoExtractor):
       for ie in IEList:
         if ie.suitable(url):
           return True
-      return False
+      return csl._match_id(url) is None
 
     @classmethod
     def _match_id(cls, url):
@@ -34,26 +34,40 @@ class YandexTranslateIE(InfoExtractor):
         info = None
         for ie in IEList:
           if ie.suitable(url):
-            tmpIE = ie()
+            ie_tmp = ie()
+            video_id = ie_tmp._match_id(url)
             if 'Youtube' in ie.ie_key():
-              tmpIE.set_downloader(self._downloader)
-            video_id = tmpIE._match_id(url)
-            info = tmpIE.extract(url)
-            vidTr = yandex.requestVideoTranslation(self, f'https://youtu.be/{video_id}' if 'Youtube' in ie.ie_key() else url, video_id)
-            if vidTr.status == 2:
-              self.report_warning(f"Video translate delayed. Please wait {vidTr.remainingTime}s")
-            subTr = yandex.requestSubtitlesTranslation(self, f'https://youtu.be/{video_id}' if 'Youtube' in ie.ie_key() else url, video_id)
+              ie_tmp.set_downloader(self._downloader)
+              yt_url = f'https://youtu.be/{video_id}'
+            else:
+              yt_url = url
+            info = ie_tmp.extract(url)
+            vid_tr = yandex.request_video_translation(self, yt_url , video_id)
+            last_resp = 0
+            while vid_tr["resp"].status == 2:
+              last_resp = vid_tr["resp"].remainingTime
+              self._sleep(vid_tr["resp"].remainingTime, video_id, f'Waiting for translation ({vid_tr["resp"].remainingTime}s)')
+              vid_tr = yandex.request_video_translation(self, yt_url, video_id, first_request = False, uuid = vid_tr["uuid"])
+              if last_resp == vid_tr["resp"].remainingTime:
+                self.report_warning(f"Video translate delayed")
+                break
 
-        if info is None: info = { "_type": "video", "url":url, "id": video_id, "title": f"Yandex translation", "duration": vidTr.duration}
+            sub_tr = yandex.request_subtitles_translation(self, yt_url, video_id)
+            break
+
+        if info is None: info = { "_type": "video", "url":url, "id": video_id, "title": f"Yandex translation", "duration": vid_tr["resp"].duration}
         if not "formats" in info:  info["formats"]=[]
         if not "subtitles" in info: info["subtitles"]={}
-        if vidTr.status==1: info["formats"].append({"url": vidTr.url, "ext": "mp3", "format": "MPEG Audio",
+        if vid_tr["resp"].status == 1: info["formats"].append({"url": vid_tr["resp"].url, "ext": "mp3", "format": "MPEG Audio",
                                 "format_id": "YT", "format_note": "Yandex translation", "audio_channels": 1,
                                 "vcodec": 'none', "acodec": "LAME3.1", "abr":128, "container":"mp3", "language":"ru",
-                                "http_headers":{"User-Agent": yandex._yandexUserAgent}})
-        if subTr.subtitles:
-          for subLang in subTr.subtitles:
-            if not subLang.translatedLanguage in info["subtitles"]: info["subtitles"][subLang.translatedLanguage] = []
-            info["subtitles"][subLang.translatedLanguage].append({"ext": "YTjson", "url": subLang.translatedUrl, "name": f'{subLang.language}->{subLang.translatedLanguage}',
-                                               "http_headers":{"User-Agent": yandex._yandexUserAgent}})
+                                "http_headers":vid_tr["headers"]})
+        if sub_tr["resp"].subtitles:
+          for sub_lang in sub_tr["resp"].subtitles:
+            if not sub_lang.translatedLanguage in info["subtitles"]: info["subtitles"][sub_lang.translatedLanguage] = []
+            info["subtitles"][sub_lang.translatedLanguage].append({"ext": "YTjson", "url": sub_lang.translatedUrl, "name": f'{sub_lang.language}->{sub_lang.translatedLanguage}',
+                                               "http_headers":sub_tr["headers"]})
+        if True:
+          with open("info.json", "w") as f:
+            json.dump(info, f, indent = 2)
         return info
