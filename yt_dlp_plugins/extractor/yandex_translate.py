@@ -5,6 +5,7 @@ import yandex
 from yt_dlp.extractor.common import InfoExtractor
 from yt_dlp.extractor.youtube import YoutubeIE
 from yt_dlp.extractor.vk import VKIE
+from ..postprocessor.yandex_translate import YandexTranslateSubtitleFixPP, YandexTranslateMergePP, YandexTranslateAutoAddPP
 
 IEList = [YoutubeIE, VKIE]
 
@@ -58,15 +59,19 @@ class YandexTranslateIE(InfoExtractor):
         if info is None: info = { "_type": "video", "url":url, "id": video_id, "title": f"Yandex translation", "duration": vid_tr["resp"].duration}
         if not "formats" in info:  info["formats"]=[]
         if not "subtitles" in info: info["subtitles"]={}
-        if vid_tr["resp"].status == 1: info["formats"].append({"url": vid_tr["resp"].url, "ext": "mp3", "format": "MPEG Audio",
+        if vid_tr["resp"].status == 1:
+          info["formats"].append({"url": vid_tr["resp"].url, "ext": "mp3", "format": "MPEG Audio",
                                 "format_id": "YT", "format_note": "Yandex translation", "audio_channels": 1,
                                 "vcodec": 'none', "acodec": "LAME3.1", "abr":128, "container":"mp3", "language":"ru",
                                 "http_headers":vid_tr["headers"]})
+          self._downloader.add_post_processor(YandexTranslateMergePP(self._downloader), when='post_process')
+          self._downloader.add_post_processor(YandexTranslateAutoAddPP(self._downloader), when='video')
         if sub_tr["resp"].subtitles:
           for sub_lang in sub_tr["resp"].subtitles:
             if not sub_lang.translatedLanguage in info["subtitles"]: info["subtitles"][sub_lang.translatedLanguage] = []
             info["subtitles"][sub_lang.translatedLanguage].append({"ext": "YTjson", "url": sub_lang.translatedUrl, "name": f'{sub_lang.language}->{sub_lang.translatedLanguage}',
                                                "http_headers":sub_tr["headers"]})
+          self._downloader.add_post_processor(YandexTranslateSubtitleFixPP(self._downloader), when='before_dl')
         if True:
           with open("info.json", "w") as f:
             json.dump(info, f, indent = 2)

@@ -3,6 +3,16 @@ from yt_dlp.postprocessor.common import PostProcessor
 from yt_dlp.postprocessor.ffmpeg import FFmpegPostProcessor
 from yt_dlp.utils import traverse_obj, prepend_extension, PostProcessingError
 
+class YandexTranslateAutoAddPP(PostProcessor):
+    def run(self, info, downloader = None):
+      if not traverse_obj(info, "requested_formats"):
+        return [], info
+      YTStream = traverse_obj(info, ("formats", (lambda key, value: traverse_obj(value, "format_id")=="YT")))
+      if YTStream and not traverse_obj(info, ("requested_formats", (lambda key, value: traverse_obj(value, "format_id")=="YT"))):
+        info["requested_formats"].extend(YTStream)
+      return [], info
+
+
 class YandexTranslateSubtitleFixPP(PostProcessor):
     def run(self, info, downloader = None):
         def ms2str (s):
@@ -38,6 +48,8 @@ class YandexTranslateMergePP(FFmpegPostProcessor):
     def run(self, info, downloader = None):
         orig_stream = None; trans_stream = None
         success = False
+        if not traverse_obj(info, ("requested_formats", (lambda key, value: traverse_obj(value, "format_id")=="YT"))):
+          return [], info
 
         filename = info['filepath']
         metadata = self.get_metadata_object(filename)
@@ -61,7 +73,7 @@ class YandexTranslateMergePP(FFmpegPostProcessor):
                           f'-metadata:s:{trans_stream["index"]}', 'language=rus', f'-metadata:s:{trans_stream["index"]}', f'title=YandexTranslated + {self.orig_volume} orig'
                         ])
         try:
-          print (options)
+          self.to_screen('Remuxing Yandex Translate')
           self.run_ffmpeg(filename, temp_filename, options)
           success = True
         except PostProcessingError as err:
