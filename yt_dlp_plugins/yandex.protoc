@@ -1,4 +1,4 @@
-// https://github.com/ilyhalight/voice-over-translation
+//https://github.com/ilyhalight/voice-over-translation/blob/c35e40725021862b2f7d470a932d5a418d03b789/src/yandexProtobuf.js
 syntax = "proto2";
 message VideoTranslationHelpObject { // const VideoTranslationHelpObject = new protobuf.Type("VideoTranslationHelpObject",)
   optional string target = 1;    // .add(new protobuf.Field("target", 1, "string")) // video_file_url or subtitles_file_url

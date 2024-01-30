@@ -1,20 +1,30 @@
-This repository contains a sample plugin package for [yt-dlp](https://github.com/yt-dlp/yt-dlp#readme). 
+# Yandex.Translate yt-dlp plugin
+Плагин для [yt-dlp](https://github.com/yt-dlp/yt-dlp#readme) для скачивания автоматического перевода с Yandex Translate, основанный на [voice-over-translation](https://github.com/ilyhalight/voice-over-translation) и [vot-cli](https://github.com/FOSWLY/vot-cli).
 
-See [yt-dlp plugins](https://github.com/yt-dlp/yt-dlp#plugins) for more details.
+Все наработки и благодарности принадлежат [ilyhalight](https://github.com/ilyhalight), [FOSWLY](https://github.com/FOSWLY) и аффилированым с ними особам.
 
+Репозитарий содержит распакованный Google Protobuf [protobuf-4.25.2-py3-none-any.whl](https://pypi.org/project/protobuf/#files)
 
-## Installation
+## Установка
 
-Requires yt-dlp `2023.01.02` or above.
+[installing yt-dlp plugins](https://github.com/yt-dlp/yt-dlp#installing-plugins)
 
-You can install this package with pip:
-```
-python3 -m pip install -U https://github.com/yt-dlp/yt-dlp-sample-plugins/archive/master.zip
-```
+В случае использования standalone yt-dlp.exe папка yt_dlp_plugins должна быть скопированна внутрь папки yt-dlp-plugins\YandexTranslate, находящейся возле yt-dlp.exe
 
-See [installing yt-dlp plugins](https://github.com/yt-dlp/yt-dlp#installing-plugins) for the other methods this plugin package can be installed.
+Пример структуры:
 
+- d:\Test\yt-dlp.exe
+- d:\Test\yt-dlp-plugins\YandexTranslate\yt_dlp_plugins\extractor\yandex_translate.py
+- ... и т.д и т.п. ... 
+- d:\Test\yt-dlp-plugins\YandexTranslate\yt_dlp_plugins\yandex.protoc
 
-## Development
+## Использование
 
-See the [Plugin Development](https://github.com/yt-dlp/yt-dlp/wiki/Plugin-Development) section of the yt-dlp wiki.
+По умолчанию отключен, для включения используйте опцию '--use-extractors YandexTranslate'.
+
+Желательно использование опций '--audio-multistreams' и '--merge-output-format mkv'.
+
+Перевод в список скачиваемых форматов добавляется автоматически. Субтитры - нужно выбирать. yt-dlp.conf - пример конфига.
+
+На текущий момент работает только с Youtube.
+
