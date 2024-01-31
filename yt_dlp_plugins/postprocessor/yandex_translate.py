@@ -58,7 +58,8 @@ class YandexTranslateMergePP(FFmpegPostProcessor):
 
         options = ['-c', 'copy', '-map', '0']
         audio_streams = traverse_obj(metadata, ("streams", (lambda key, value: traverse_obj(value, "codec_type")=="audio")), [None])
-        if not audio_streams[0] is None:
+
+        if len(audio_streams) > 1:
           orig_stream = traverse_obj(audio_streams, (lambda key,value: traverse_obj(value, ("disposition", "default"), 0) == 1), [None])[0]
           if orig_stream is None:
             orig_stream = audio_streams[0]
@@ -72,12 +73,12 @@ class YandexTranslateMergePP(FFmpegPostProcessor):
                           '-map', '[audio_out]', f'-c:{trans_stream["index"]}', 'libmp3lame', f'-disposition:{trans_stream["index"]}', 'default',
                           f'-metadata:s:{trans_stream["index"]}', 'language=rus', f'-metadata:s:{trans_stream["index"]}', f'title=YandexTranslated + {self.orig_volume} orig'
                         ])
-        try:
-          self.to_screen('Remuxing Yandex Translate')
-          self.run_ffmpeg(filename, temp_filename, options)
-          success = True
-        except PostProcessingError as err:
-          pass
+          try:
+            self.to_screen('Remuxing Yandex Translate')
+            self.run_ffmpeg(filename, temp_filename, options)
+            success = True
+          except PostProcessingError as err:
+            pass
         if success:
             os.replace(temp_filename, filename)
         return [], info  # return list_of_files_to_delete, info_dict

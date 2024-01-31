@@ -7,7 +7,9 @@ from yt_dlp.extractor.youtube import YoutubeIE
 from yt_dlp.extractor.vk import VKIE
 from ..postprocessor.yandex_translate import YandexTranslateSubtitleFixPP, YandexTranslateMergePP, YandexTranslateAutoAddPP
 
-IEList = [YoutubeIE, VKIE]
+from yt_dlp.extractor._extractors import *
+IEList = [klass for name, klass in globals().items() if name.endswith('IE') and not name in ['GenericIE', 'YandexTranslateIE']]
+IEList.append(GenericIE)
 
 class YandexTranslateIE(InfoExtractor):
     _WORKING = False
@@ -35,11 +37,10 @@ class YandexTranslateIE(InfoExtractor):
         info = None
         for ie in IEList:
           if ie.suitable(url):
-            ie_tmp = ie()
+            ie_tmp = ie(self._downloader)
             video_id = ie_tmp._match_id(url)
             if 'Youtube' in ie.ie_key():
-              ie_tmp.set_downloader(self._downloader)
-              yt_url = f'https://youtu.be/{video_id}'
+              yt_url = f'https://youtu.be/{video_id}' # Subtitle glitch
             else:
               yt_url = url
             info = ie_tmp.extract(url)
@@ -52,7 +53,6 @@ class YandexTranslateIE(InfoExtractor):
               if last_resp == vid_tr["resp"].remainingTime:
                 self.report_warning(f"Video translate delayed")
                 break
-
             sub_tr = yandex.request_subtitles_translation(self, yt_url, video_id)
             break
 
@@ -60,19 +60,18 @@ class YandexTranslateIE(InfoExtractor):
         if not "formats" in info:  info["formats"]=[]
         if not "subtitles" in info: info["subtitles"]={}
         if vid_tr["resp"].status == 1:
+          self.to_screen("Audio translation available")
           info["formats"].append({"url": vid_tr["resp"].url, "ext": "mp3", "format": "MPEG Audio",
                                 "format_id": "YT", "format_note": "Yandex translation", "audio_channels": 1,
                                 "vcodec": 'none', "acodec": "LAME3.1", "abr":128, "container":"mp3", "language":"ru",
-                                "http_headers":vid_tr["headers"]})
+                                "http_headers":vid_tr["headers"], "preference":-2})
           self._downloader.add_post_processor(YandexTranslateMergePP(self._downloader), when='post_process')
           self._downloader.add_post_processor(YandexTranslateAutoAddPP(self._downloader), when='video')
         if sub_tr["resp"].subtitles:
+          self.to_screen("Subtitles translation available")
           for sub_lang in sub_tr["resp"].subtitles:
             if not sub_lang.translatedLanguage in info["subtitles"]: info["subtitles"][sub_lang.translatedLanguage] = []
             info["subtitles"][sub_lang.translatedLanguage].append({"ext": "YTjson", "url": sub_lang.translatedUrl, "name": f'{sub_lang.language}->{sub_lang.translatedLanguage}',
                                                "http_headers":sub_tr["headers"]})
           self._downloader.add_post_processor(YandexTranslateSubtitleFixPP(self._downloader), when='before_dl')
-        if True:
-          with open("info.json", "w") as f:
-            json.dump(info, f, indent = 2)
         return info
