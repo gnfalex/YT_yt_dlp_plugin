@@ -12,7 +12,6 @@ class YandexTranslateAutoAddPP(PostProcessor):
         info["requested_formats"].extend(YTStream)
       return [], info
 
-
 class YandexTranslateSubtitleFixPP(PostProcessor):
     def run(self, info, downloader = None):
         def ms2str (s):

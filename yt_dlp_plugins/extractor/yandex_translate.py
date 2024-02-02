@@ -1,13 +1,55 @@
 import sys, os, re, json
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) + "\\..\\yandex\\")
-import yandex
+from uuid import uuid4 as getUUID
+import hmac, hashlib
 
 from yt_dlp.extractor.common import InfoExtractor
-from yt_dlp.extractor.youtube import YoutubeIE
-from yt_dlp.extractor.vk import VKIE
 from ..postprocessor.yandex_translate import YandexTranslateSubtitleFixPP, YandexTranslateMergePP, YandexTranslateAutoAddPP
-
 from yt_dlp.extractor._extractors import *
+
+from ..extractor import yandex_pb2 
+
+
+_workerHost = "api.browser.yandex.ru"
+_yandexHmacKey = b"xtGCyGdTY2Jy6OMEKdTuXev3Twhkamgm"
+_yandexUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 YaBrowser/23.7.1.1140 Yowser/2.5 Safari/537.36"
+_getSignature = lambda body: hmac.new(_yandexHmacKey, msg=body, digestmod=hashlib.sha256).hexdigest()
+
+def request_subtitles_translation(self, sub_url, video_id, request_lang="en", first_request = True, uuid = getUUID().hex):
+  subReq = yandex_pb2.VideoSubtitlesRequest()
+  subReq.url = sub_url; subReq.language = request_lang
+  body = subReq.SerializeToString()
+
+  headers = {"Accept": "application/x-protobuf", "Content-Type": "application/x-protobuf", "Accept-Language": "en",
+             "User-Agent": _yandexUserAgent, "Vsubs-Signature": _getSignature(body), "Sec-Vsubs-Token": uuid}
+  binResp = self._request_webpage( f"https://{_workerHost}/video-subtitles/get-subtitles", video_id, data = body, headers = headers)
+
+  translateResponse = yandex_pb2.VideoSubtitlesResponse()
+  try:
+    translateResponse.ParseFromString(binResp.read())
+  except:
+    self.report_warning ("Yandex subtitles error")
+  finally:
+    return {"resp":translateResponse, "uuid":uuid, "headers":headers}
+
+def request_video_translation(self, video_url, video_id, duration = 341, request_lang="en", response_lang="ru", first_request = True, uuid = getUUID().hex):
+  videoReq = yandex_pb2.VideoTranslationRequest()
+  videoReq.duration = duration ; videoReq.url = video_url ; videoReq.language = request_lang
+  videoReq.responseLanguage = response_lang ; videoReq.firstRequest = first_request
+  videoReq.unknown2 = 1; videoReq.unknown3 = videoReq.unknown4 = videoReq.unknown5 = 0
+  body = videoReq.SerializeToString()
+
+  headers = {"Accept": "application/x-protobuf", "Content-Type": "application/x-protobuf", "Accept-Language": "en",
+             "User-Agent": _yandexUserAgent, "Vtrans-Signature": _getSignature(body), "Sec-Vtrans-Token": uuid}
+  binResp = self._request_webpage( f"https://{_workerHost}/video-translation/translate", video_id, data = body, headers = headers)
+
+  translateResponse = yandex_pb2.VideoTranslationResponse()
+  try:
+    translateResponse.ParseFromString(binResp.read())
+  except:
+    self.report_warning ("Yandex video translation error")
+  finally:
+    return {"resp":translateResponse, "uuid":uuid, "headers":headers}
+
 IEList = [klass for name, klass in globals().items() if name.endswith('IE') and not name in ['GenericIE', 'YandexTranslateIE']]
 IEList.append(GenericIE)
 
@@ -44,16 +86,16 @@ class YandexTranslateIE(InfoExtractor):
             else:
               yt_url = url
             info = ie_tmp.extract(url)
-            vid_tr = yandex.request_video_translation(self, yt_url , video_id)
+            vid_tr = request_video_translation(self, yt_url , video_id)
             last_resp = 0
             while vid_tr["resp"].status == 2:
               last_resp = vid_tr["resp"].remainingTime
               self._sleep(vid_tr["resp"].remainingTime, video_id, f'Waiting for translation ({vid_tr["resp"].remainingTime}s)')
-              vid_tr = yandex.request_video_translation(self, yt_url, video_id, first_request = False, uuid = vid_tr["uuid"])
+              vid_tr = request_video_translation(self, yt_url, video_id, first_request = False, uuid = vid_tr["uuid"])
               if last_resp == vid_tr["resp"].remainingTime:
                 self.report_warning(f"Video translate delayed")
                 break
-            sub_tr = yandex.request_subtitles_translation(self, yt_url, video_id)
+            sub_tr = request_subtitles_translation(self, yt_url, video_id)
             break
 
         if info is None: info = { "_type": "video", "url":url, "id": video_id, "title": f"Yandex translation", "duration": vid_tr["resp"].duration}
