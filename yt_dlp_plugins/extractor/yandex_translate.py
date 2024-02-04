@@ -2,6 +2,7 @@ import sys, os, re, json
 from uuid import uuid4 as getUUID
 import hmac, hashlib
 
+from yt_dlp.utils import ExtractorError
 from yt_dlp.extractor.common import InfoExtractor
 from ..postprocessor.yandex_translate import YandexTranslateSubtitleFixPP, YandexTranslateMergePP, YandexTranslateAutoAddPP
 from yt_dlp.extractor._extractors import *
@@ -93,7 +94,8 @@ class YandexTranslateIE(InfoExtractor):
               self._sleep(vid_tr["resp"].remainingTime, video_id, f'Waiting for translation ({vid_tr["resp"].remainingTime}s)')
               vid_tr = request_video_translation(self, yt_url, video_id, first_request = False, uuid = vid_tr["uuid"])
               if last_resp == vid_tr["resp"].remainingTime:
-                self.report_warning(f"Video translate delayed")
+                #self.report_warning(f"Video translate delayed")
+                raise ExtractorError(f'Video translate delayed {video_id}. Please try later', expected=True)
                 break
             sub_tr = request_subtitles_translation(self, yt_url, video_id)
             break
@@ -102,13 +104,18 @@ class YandexTranslateIE(InfoExtractor):
         if not "formats" in info:  info["formats"]=[]
         if not "subtitles" in info: info["subtitles"]={}
         if vid_tr["resp"].status == 1:
+          orig_volume = self._configuration_arg('orig_volume', [0.5])[0]
           self.to_screen("Audio translation available")
           info["formats"].append({"url": vid_tr["resp"].url, "ext": "mp3", "format": "MPEG Audio",
                                 "format_id": "YT", "format_note": "Yandex translation", "audio_channels": 1,
                                 "vcodec": 'none', "acodec": "LAME3.1", "abr":128, "container":"mp3", "language":"ru",
                                 "http_headers":vid_tr["headers"], "preference":-2})
-          self._downloader.add_post_processor(YandexTranslateMergePP(self._downloader), when='post_process')
+          if orig_volume != '0':
+            self._downloader.add_post_processor(YandexTranslateMergePP(self._downloader, orig_volume=orig_volume), when='post_process')
           self._downloader.add_post_processor(YandexTranslateAutoAddPP(self._downloader), when='video')
+        else:
+          raise ExtractorError(f'Unknown error: \n{str(vid_tr["resp"])}', expected=True)
+
         if sub_tr["resp"].subtitles:
           self.to_screen("Subtitles translation available")
           for sub_lang in sub_tr["resp"].subtitles:

@@ -53,7 +53,6 @@ class YandexTranslateMergePP(FFmpegPostProcessor):
         filename = info['filepath']
         metadata = self.get_metadata_object(filename)
         temp_filename = prepend_extension(filename, "tmp")
-        orig_volume = 0.5
 
         options = ['-c', 'copy', '-map', '0']
         audio_streams = traverse_obj(metadata, ("streams", (lambda key, value: traverse_obj(value, "codec_type")=="audio")), [None])
