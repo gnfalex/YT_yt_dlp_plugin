@@ -41,9 +41,10 @@ class YandexTranslateSubtitleFixPP(PostProcessor):
         return delFiles, info  # return list_of_files_to_delete, info_dict
 
 class YandexTranslateMergePP(FFmpegPostProcessor):
-    def __init__(self, downloader, orig_volume = "0.5"):
+    def __init__(self, downloader, orig_volume = "0.4", codec = "libopus"):
         FFmpegPostProcessor.__init__(self, downloader)
         self.orig_volume = orig_volume
+        self.codec = codec
 
     def run(self, info, downloader = None):
         orig_stream = None; trans_stream = None
@@ -69,7 +70,7 @@ class YandexTranslateMergePP(FFmpegPostProcessor):
         if not (orig_stream is None and trans_stream is None):
           options.extend(['-map', f'-0:{trans_stream["index"]}', '-filter_complex',
                           f'[0:{orig_stream["index"]}]volume={self.orig_volume}[original];[original][0:{trans_stream["index"]}]amix=inputs=2:duration=longest[audio_out]',
-                          '-map', '[audio_out]', f'-c:{trans_stream["index"]}', 'libmp3lame', f'-disposition:{trans_stream["index"]}', 'default',
+                          '-map', '[audio_out]', f'-c:{trans_stream["index"]}', self.codec, f'-disposition:{trans_stream["index"]}', 'default',
                           f'-metadata:s:{trans_stream["index"]}', 'language=rus', f'-metadata:s:{trans_stream["index"]}', f'title=YandexTranslated + {self.orig_volume} orig'
                         ])
           try:

@@ -104,14 +104,15 @@ class YandexTranslateIE(InfoExtractor):
         if not "formats" in info:  info["formats"]=[]
         if not "subtitles" in info: info["subtitles"]={}
         if vid_tr["resp"].status == 1:
-          orig_volume = self._configuration_arg('orig_volume', [0.5])[0]
+          orig_volume = self._configuration_arg('orig_volume', [0.4])[0]
+          codec = self._configuration_arg('codec', ['libopus'])[0]
           self.to_screen("Audio translation available")
           info["formats"].append({"url": vid_tr["resp"].url, "ext": "mp3", "format": "MPEG Audio",
                                 "format_id": "YT", "format_note": "Yandex translation", "audio_channels": 1,
                                 "vcodec": 'none', "acodec": "LAME3.1", "abr":128, "container":"mp3", "language":"ru",
                                 "http_headers":vid_tr["headers"], "preference":-2})
           if orig_volume != '0':
-            self._downloader.add_post_processor(YandexTranslateMergePP(self._downloader, orig_volume=orig_volume), when='post_process')
+            self._downloader.add_post_processor(YandexTranslateMergePP(self._downloader, orig_volume=orig_volume, codec=codec), when='post_process')
           self._downloader.add_post_processor(YandexTranslateAutoAddPP(self._downloader), when='video')
         else:
           raise ExtractorError(f'Unknown error: \n{str(vid_tr["resp"])}', expected=True)
