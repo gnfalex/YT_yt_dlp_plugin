@@ -5,11 +5,12 @@ from yt_dlp.utils import traverse_obj, prepend_extension, PostProcessingError
 
 class YandexTranslateAutoAddPP(PostProcessor):
     def run(self, info, downloader = None):
-      if not traverse_obj(info, "requested_formats"):
-        return [], info
       YTStream = traverse_obj(info, ("formats", (lambda key, value: traverse_obj(value, "format_id")=="YT")))
       if YTStream and not traverse_obj(info, ("requested_formats", (lambda key, value: traverse_obj(value, "format_id")=="YT"))):
-        info["requested_formats"].extend(YTStream)
+        if not traverse_obj(info, "requested_formats"):
+          info["requested_formats"] = traverse_obj(info, ("formats", (lambda key, value:traverse_obj(value, "format_id")==traverse_obj(info,"format_id"))))
+        if traverse_obj(info, "requested_formats"):
+          info["requested_formats"].extend(YTStream)
       return [], info
 
 class YandexTranslateSubtitleFixPP(PostProcessor):
