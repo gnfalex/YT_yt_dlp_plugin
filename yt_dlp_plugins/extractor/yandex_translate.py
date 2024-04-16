@@ -114,6 +114,9 @@ class YandexTranslateIE(InfoExtractor):
           if orig_volume != '0':
             self._downloader.add_post_processor(YandexTranslateMergePP(self._downloader, orig_volume=orig_volume, codec=codec), when='post_process')
           self._downloader.add_post_processor(YandexTranslateAutoAddPP(self._downloader), when='video')
+        elif vid_tr["resp"].status == 0:
+          self.report_warning (f'Err {vid_tr["resp"].errcode}')
+          self.report_warning (vid_tr["resp"].message.decode('utf-8'))
         else:
           raise ExtractorError(f'Unknown error: \n{str(vid_tr["resp"])}', expected=True)
 

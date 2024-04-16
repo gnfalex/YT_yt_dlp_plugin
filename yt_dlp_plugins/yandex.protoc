@@ -39,9 +39,9 @@ message VideoTranslationResponse { //const VideoTranslationResponse = new protob
   optional int32 status = 4; // .add(new protobuf.Field("status", 4, "int32"))
   optional int32 remainingTime = 5; // .add(new protobuf.Field("remainingTime", 5, "int32")) // secs before translation (used as interval before next request in yaBrowser)
   optional int32 unknown0 = 6; // .add(new protobuf.Field("unknown0", 6, "int32")) // unknown 0 (1st request) -> 10 (2nd, 3th and etc requests)
-  optional string unknown1 = 7; // .add(new protobuf.Field("unknown1", 7, "string"))
+  optional string errcode = 7; // .add(new protobuf.Field("unknown1", 7, "string"))
   optional string language = 8; // .add(new protobuf.Field("language", 8, "string")) // detected language (if the wrong one is set)
-  optional string message = 9; // .add(new protobuf.Field("message", 9, "string"));
+  optional bytes message = 9; // .add(new protobuf.Field("message", 9, "string"));
 }
 
 message VideoSubtitlesObject { // const VideoSubtitlesObject = new protobuf.Type("VideoSubtitlesObject")
