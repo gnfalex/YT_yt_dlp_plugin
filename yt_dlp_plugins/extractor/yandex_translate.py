@@ -11,7 +11,7 @@ from ..extractor import yandex_pb2
 
 
 _workerHost = "api.browser.yandex.ru"
-_yandexHmacKey = b"xtGCyGdTY2Jy6OMEKdTuXev3Twhkamgm"
+_yandexHmacKey = b"bt8xH3VOlb4mqf0nqAibnDOoiPlXsisf"
 _yandexUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 YaBrowser/23.7.1.1140 Yowser/2.5 Safari/537.36"
 _getSignature = lambda body: hmac.new(_yandexHmacKey, msg=body, digestmod=hashlib.sha256).hexdigest()
 
