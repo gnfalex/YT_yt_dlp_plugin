@@ -124,7 +124,7 @@ class YandexTranslateIE(InfoExtractor):
           self.to_screen("Subtitles translation available")
           for sub_lang in sub_tr["resp"].subtitles:
             if not sub_lang.translatedLanguage in info["subtitles"]: info["subtitles"][sub_lang.translatedLanguage] = []
-            info["subtitles"][sub_lang.translatedLanguage].append({"ext": "YTjson", "url": sub_lang.translatedUrl, "name": f'{sub_lang.language}->{sub_lang.translatedLanguage}',
+            info["subtitles"][sub_lang.translatedLanguage].append({"ext": "json3", "url": sub_lang.translatedUrl, "name": f'{sub_lang.language}->{sub_lang.translatedLanguage}',
                                                "http_headers":sub_tr["headers"]})
           self._downloader.add_post_processor(YandexTranslateSubtitleFixPP(self._downloader), when='before_dl')
         return info

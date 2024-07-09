@@ -21,7 +21,7 @@ class YandexTranslateSubtitleFixPP(PostProcessor):
 
         delFiles = []
         for subs_lang, subs_data in traverse_obj(info, "requested_subtitles", {}).items():
-          if subs_data.get("ext")=="YTjson":
+          if ("YaBrowser" in traverse_obj(subs_data, ("http_headers", "User-Agent"))) and subs_data.get("ext")=="json3":
             try:
               oldName = subs_data.get("filepath")
               if oldName is None: raise
