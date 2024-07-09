@@ -6,7 +6,7 @@ from yt_dlp.utils import traverse_obj, prepend_extension, PostProcessingError
 class YandexTranslateAutoAddPP(PostProcessor):
     def run(self, info, downloader = None):
       YTStream = traverse_obj(info, ("formats", (lambda key, value: traverse_obj(value, "format_id")=="YT")))
-      if YTStream and not traverse_obj(info, ("requested_formats", (lambda key, value: traverse_obj(value, "format_id")=="YT"))):
+      if YTStream and not traverse_obj(info, "format_id")=="YT" and not traverse_obj(info, ("requested_formats", (lambda key, value: traverse_obj(value, "format_id")=="YT"))):
         if not traverse_obj(info, "requested_formats"):
           info["requested_formats"] = traverse_obj(info, ("formats", (lambda key, value:traverse_obj(value, "format_id")==traverse_obj(info,"format_id"))))
         if traverse_obj(info, "requested_formats"):
@@ -21,7 +21,7 @@ class YandexTranslateSubtitleFixPP(PostProcessor):
 
         delFiles = []
         for subs_lang, subs_data in traverse_obj(info, "requested_subtitles", {}).items():
-          if ("YaBrowser" in traverse_obj(subs_data, ("http_headers", "User-Agent"))) and subs_data.get("ext")=="json3":
+          if ("YaBrowser" in traverse_obj(subs_data, ("http_headers", "User-Agent"), expected_type=str, default="")) and subs_data.get("ext")=="json3":
             try:
               oldName = subs_data.get("filepath")
               if oldName is None: raise

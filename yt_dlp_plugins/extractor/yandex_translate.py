@@ -12,7 +12,7 @@ from ..extractor import yandex_pb2
 
 _workerHost = "api.browser.yandex.ru"
 _yandexHmacKey = b"bt8xH3VOlb4mqf0nqAibnDOoiPlXsisf"
-_yandexUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 YaBrowser/23.7.1.1140 Yowser/2.5 Safari/537.36"
+_yandexUserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 YaBrowser/24.4.0.0 Safari/537.36"
 _getSignature = lambda body: hmac.new(_yandexHmacKey, msg=body, digestmod=hashlib.sha256).hexdigest()
 
 def request_subtitles_translation(self, sub_url, video_id, request_lang="en", first_request = True, uuid = getUUID().hex):
@@ -87,6 +87,7 @@ class YandexTranslateIE(InfoExtractor):
             else:
               yt_url = url
             info = ie_tmp.extract(url)
+            #print (info)
             vid_tr = request_video_translation(self, yt_url , video_id)
             last_resp = 0
             while vid_tr["resp"].status == 2:
