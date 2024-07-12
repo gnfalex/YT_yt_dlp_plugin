@@ -87,6 +87,8 @@ class YandexTranslateIE(InfoExtractor):
               yt_url = f'https://youtu.be/{video_id}' # Subtitle glitch
             else:
               yt_url = url
+            #with open(f"info{video_id}.json", "w") as fj:
+                #json.dump(info, fj, indent=2, default= lambda x: "unsupported object type")
             if info.get("ie_key") and not info.get("formats"):
                 return self.extract(info.get("url"))
             vid_tr = request_video_translation(self, yt_url , video_id)
@@ -128,5 +130,5 @@ class YandexTranslateIE(InfoExtractor):
             if not sub_lang.translatedLanguage in info["subtitles"]: info["subtitles"][sub_lang.translatedLanguage] = []
             info["subtitles"][sub_lang.translatedLanguage].append({"ext": "json3", "url": sub_lang.translatedUrl, "name": f'{sub_lang.language}->{sub_lang.translatedLanguage}',
                                                "http_headers":sub_tr["headers"]})
-          self._downloader.add_post_processor(YandexTranslateSubtitleFixPP(self._downloader), when='before_dl')8
+          self._downloader.add_post_processor(YandexTranslateSubtitleFixPP(self._downloader), when='before_dl')
         return info
