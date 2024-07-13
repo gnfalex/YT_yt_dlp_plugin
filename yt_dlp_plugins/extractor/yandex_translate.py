@@ -87,12 +87,8 @@ class YandexTranslateIE(InfoExtractor):
               yt_url = f'https://youtu.be/{video_id}' # Subtitle glitch
             else:
               yt_url = url
-            #with open(f"info{video_id}.json", "w") as fj:
-                #json.dump(info, fj, indent=2, default= lambda x: "unsupported object type")
             if info.get("_type") == "playlist":
-                info["entries"]=[self._real_extract(entry.get("url")) for entry in info.get("entries")]
-                #for entry in info.get("entries"):
-                  #print (entry)
+                info["entries"]=[{**entry,"ie_key":"YandexTranslate"} for entry in info.get("entries")]
                 return info
             if info.get("ie_key") and not info.get("formats"):
                 return self.extract(info.get("url"))
