@@ -11,6 +11,8 @@ class YandexTranslateAutoAddPP(PostProcessor):
           info["requested_formats"] = traverse_obj(info, ("formats", (lambda key, value:traverse_obj(value, "format_id")==traverse_obj(info,"format_id"))))
         if traverse_obj(info, "requested_formats"):
           info["requested_formats"].extend(YTStream)
+        #with open ( "info.json","w") as f:
+         #   json.dump (info, f, default=lambda x: "USO", indent=2)
       return [], info
 
 class YandexTranslateSubtitleFixPP(PostProcessor):
@@ -38,7 +40,7 @@ class YandexTranslateSubtitleFixPP(PostProcessor):
                 delFiles.append(oldName)
             except:
               pass
-        return delFiles, info  # return list_of_files_to_delete, info_dict
+        return delFiles, info
 
 class YandexTranslateMergePP(FFmpegPostProcessor):
     def __init__(self, downloader, orig_volume = "0.4", codec = "libopus"):
@@ -81,4 +83,4 @@ class YandexTranslateMergePP(FFmpegPostProcessor):
             pass
         if success:
             os.replace(temp_filename, filename)
-        return [], info  # return list_of_files_to_delete, info_dict
+        return [], info

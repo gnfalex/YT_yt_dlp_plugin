@@ -82,11 +82,14 @@ class YandexTranslateIE(InfoExtractor):
           if ie.suitable(url):
             ie_tmp = ie(self._downloader)
             info = ie_tmp.extract(url)
-            video_id = info.get("id", ie_tmp._match_id(url))
+            video_id = "direct" if "direct" in info else info.get("id", ie_tmp._match_id(url))
             if 'Youtube' in ie.ie_key():
               yt_url = f'https://youtu.be/{video_id}' # Subtitle glitch
             else:
               yt_url = url
+            if info.get("direct"):
+                info["formats"]=[{"url":info.get("url"), "ext":info.get("ext"), "container":info.get("ext"),"preference":100
+                }]
             if info.get("_type") == "playlist":
                 info["entries"]=[{**entry,"ie_key":"YandexTranslate"} for entry in info.get("entries")]
                 return info
