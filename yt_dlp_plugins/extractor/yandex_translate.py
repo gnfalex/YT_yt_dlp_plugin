@@ -88,7 +88,7 @@ class YandexTranslateIE(InfoExtractor):
             else:
               yt_url = url
             if info.get("direct"):
-                info["formats"]=[{"url":info.get("url"), "ext":info.get("ext"), "container":info.get("ext"),"preference":100
+                info["formats"]=[{"format":"Direct url", "format_id":"0", "url":info.get("url"), "ext":info.get("ext"), "container":info.get("ext"),"preference":100
                 }]
             if info.get("_type") == "playlist":
                 info["entries"]=[{**entry,"ie_key":"YandexTranslate"} for entry in info.get("entries")]
