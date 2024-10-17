@@ -4,3 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [tool.distutils.bdist_wheel]
 universal = true
+
+[project]
+name = "yt-dlp-YandexTranslate"
+version = "2024.10.01"
+dependencies = ["protobuf"]
